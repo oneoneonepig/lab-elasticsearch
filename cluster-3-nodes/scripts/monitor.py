@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 
 import sys
@@ -55,12 +56,20 @@ def check_nodes():
 
 
 def check_cluster():
-    pass
+    print()
+
+    try:
+        print(">> Listing cluster nodes...")
+        resp = es.cat.nodes(v=True)
+        print(resp)
+    except Exception as e:
+        print("Failed checking cluster nodes:", e)
+
 
 
 def refresh_indices():
     print()
-    
+
     try:
         if args.index:
             print(">> Refreshing index {}...".format(args.index))
@@ -114,6 +123,7 @@ def main():
         sys.exit(1)
 
     check_nodes()
+    check_cluster()
     refresh_indices()
     check_indices()
     check_shards()

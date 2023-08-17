@@ -21,6 +21,8 @@ This script can allow you to easily provision a new Elasticsearch cluster.
 
 > Pick one, do not provision both!
 
+> `cluster-3-nodes` is recommended
+
 To provision a 3 node cluster:
 ```bash
 $ cd cluster-3-nodes
@@ -33,13 +35,14 @@ $ cd cluster-3-nodes
 $ docker compose up -d
 ```
 
-## Prepare Python environment
+### Prepare Python environment
 
 ```bash
+
 sudo apt install python3.10-venv
 python3 -m venv venv
 . ./venv/bin/activate
-pip install -r requirements.txt
+pip install -r ../requirements.txt
 ```
 
 ### Create indices
@@ -109,7 +112,7 @@ Average indexing rate: 139.48 docs/sec
 
 ### Query some documents
 ```bash
-./query.py -i myindex-4s1r -n 10
+$ ./query.py -i myindex-4s1r -n 10
 ```
 
 ## Failover tests
@@ -121,7 +124,7 @@ When performing tests, you can open a new windows and keep the `./monitor.py` sc
 ### Stop a single node in a three-node cluster
 
 ```bash
-docker stop `docker compose ps es02 -q`
+$ docker stop `docker compose ps es02 -q`
 ```
 
 After stopping a single node, the remaining nodes can reach the quorum.
@@ -134,10 +137,10 @@ After stopping a single node, the remaining nodes can reach the quorum.
 
 ```bash
 # to delete the containers
-docker compose down
+$ docker compose down
 
 # to delete the containers and the volumes
-docker compose down -v
+$ docker compose down -v
 ```
 
 ## Components

@@ -1,0 +1,136 @@
+version: "3.8"
+
+x-env: &env
+  cluster.name: ${CLUSTER_NAME}
+  cluster.initial_master_nodes: ${ES_ALL_NODES}
+  discovery.seed_hosts: ${ES_ALL_NODES}
+  ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
+  bootstrap.memory_lock: true
+  xpack.security.enabled: false
+  xpack.license.self_generated.type: ${LICENSE}
+
+x-default-es: &default-es
+  image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+  mem_limit: ${ES_MEM_LIMIT}
+  ulimits:
+    memlock:
+      soft: -1
+      hard: -1
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:9200"]
+    interval: 10s
+    timeout: 5s
+    retries: 5
+    start_period: 120s
+
+services:
+  es01:
+    <<: *default-es
+    volumes:
+      - esdata01:/usr/share/elasticsearch/data
+    ports:
+      - 9201:9200
+    environment:
+      <<: *env
+      node.name: es01
+  es02:
+    <<: *default-es
+    volumes:
+      - esdata02:/usr/share/elasticsearch/data
+    ports:
+      - 9202:9200
+    environment:
+      <<: *env
+      node.name: es02
+  es03:
+    <<: *default-es
+    volumes:
+      - esdata03:/usr/share/elasticsearch/data
+    ports:
+      - 9203:9200
+    environment:
+      <<: *env
+      node.name: es03
+  es04:
+    <<: *default-es
+    volumes:
+      - esdata04:/usr/share/elasticsearch/data
+    ports:
+      - 9204:9200
+    environment:
+      <<: *env
+      node.name: es04
+  es-voting:
+    <<: *default-es
+    volumes:
+      - esdata-voting:/usr/share/elasticsearch/data
+    ports:
+      - 9205:9200
+    environment:
+      <<: *env
+      node.name: es-voting
+      node.roles: master,voting_only
+    mem_limit: '512m'
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
+    volumes:
+      - kibanadata:/usr/share/kibana/data
+    ports:
+      - 5601:5601
+    environment:
+      SERVERNAME: kibana
+      ELASTICSEARCH_HOSTS: '["http://es01:9200","http://es02:9200","http://es03:9200","http://es04:9200","http://es-voting:9200"]'
+      ELASTICSEARCH_USERNAME: kibana_system
+      ELASTICSEARCH_PASSWORD: ${KIBANA_PASSWORD}
+
+  haproxy:
+    image: haproxy:${HAPROXY_VERSION} # Use the appropriate HAProxy image version
+    container_name: haproxy
+    volumes:
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    ports:
+      - "9200:9200"
+
+  elasticsearch_exporter:
+    profiles:
+      - monitor
+    image: bitnami/elasticsearch-exporter:1.6.0
+    command:
+      - "--es.uri=http://haproxy:9200"
+      - "--es.all"
+      - "--es.indices"
+      - "--es.indices_settings"
+      - "--es.shards"
+    ports:
+    - 9114:9114
+
+  cadvisor:
+    profiles:
+      - monitor
+    image: gcr.io/cadvisor/cadvisor:v0.47.2
+    volumes:
+      - "/:/rootfs:ro"
+      - "/var/run:/var/run:ro"
+      - "/sys:/sys:ro"
+      - "/var/lib/docker/:/var/lib/docker:ro"
+      - "/dev/disk/:/dev/disk:ro"
+    ports:
+      - "8080:8080"
+    privileged: true
+    devices:
+      - "/dev/kmsg"
+
+volumes:
+  esdata01:
+    driver: local
+  esdata02:
+    driver: local
+  esdata03:
+    driver: local
+  esdata04:
+    driver: local
+  esdata-voting:
+    driver: local
+  kibanadata:
+    driver: local

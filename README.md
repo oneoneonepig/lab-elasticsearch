@@ -39,10 +39,10 @@ $ docker compose up -d
 
 ```bash
 
-sudo apt install python3.10-venv
-python3 -m venv venv
-. ./venv/bin/activate
-pip install -r ../requirements.txt
+$ sudo apt install python3.10-venv wamerican-small
+$ python3 -m venv venv
+$ . ./venv/bin/activate
+$ pip install -r ../requirements.txt
 ```
 
 ### Create indices
